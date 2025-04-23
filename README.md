@@ -1,2 +1,2 @@
 # esp32code
-VScode中platformio开发esp32代码
+VScode开发esp32代码使用platformio
