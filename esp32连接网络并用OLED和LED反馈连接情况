@@ -1,0 +1,77 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <WiFi.h>
+
+#define SCREEN_WIDTH 128    // OLED 显示屏宽度
+#define SCREEN_HEIGHT 64    // OLED 显示屏高度
+#define OLED_RESET -1       // 若没有复位引脚，设为 -1
+#define SCREEN_ADDRESS 0x3C // I2C 地址，可能需要根据实际情况调整
+
+#define LED 14
+
+// 使用软件 I2C 初始化 OLED 对象
+Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// 定义 Wi-Fi 名与密码
+const char *ssid = "test";
+const char *password = "test1234"; // 密码至少为 8 个字符
+
+void setup()
+{
+  // 初始化串口通信，用于调试输出
+  Serial.begin(9600);
+
+  // 初始化 I2C 总线
+  Wire.begin(13, 18); // SDA 接 PIN13，SCL 接 PIN18
+
+  // 初始化 OLED 显示屏
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+  {
+    oled.setCursor(0, 5);
+    oled.print("SSD131590 allocation failed");
+    oled.display();
+    for (;;)
+      ;
+  }
+
+  oled.clearDisplay();
+  oled.display();
+  oled.setTextSize(1);              // 设置字体大小
+  oled.setTextColor(SSD1306_WHITE); // 设置文本颜色
+
+  // 设置 LED 引脚模式
+  pinMode(LED, OUTPUT);
+
+  // 断开之前的连接
+  WiFi.disconnect(true);
+
+  WiFi.begin(ssid, password);
+  oled.setCursor(0, 5);
+  oled.print("Waiting for connection");
+  oled.display();
+  digitalWrite(LED, LOW);
+
+  // 检测是否连接成功
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    oled.print(".");
+    oled.display();
+  }
+
+  oled.setCursor(0, 5);
+  oled.clearDisplay();
+  oled.print("Connected");
+  digitalWrite(LED, HIGH);
+  oled.display();
+
+  Serial.println("WiFi connected");
+  Serial.println(WiFi.localIP());
+}
+
+void loop()
+{
+  // 可以在这里添加其他循环任务
+}
