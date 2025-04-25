@@ -73,5 +73,13 @@ void setup()
 
 void loop()
 {
+if (WiFi.status() != WL_CONNECTED)
+  {
+    oled.clearDisplay();
+    oled.setCursor(0,5);
+    oled.print("disconnected");
+    oled.display();
+  }
+  digitalWrite(LED, LOW);
   // 可以在这里添加其他循环任务
 }
