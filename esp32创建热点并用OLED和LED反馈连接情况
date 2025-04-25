@@ -1,0 +1,88 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <WiFi.h>
+
+#define SCREEN_WIDTH 128    // OLED 显示屏宽度
+#define SCREEN_HEIGHT 64    // OLED 显示屏高度
+#define OLED_RESET -1       // 若没有复位引脚，设为 -1
+#define SCREEN_ADDRESS 0x3C // I2C 地址，可能需要根据实际情况调整
+
+#define LED 14
+
+// 使用软件 I2C 初始化 OLED 对象
+Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// 定义 Wi-Fi 名与密码
+const char *ssid = "test";
+const char *password = "test1234"; // 修改密码为至少 8 个字符
+
+void setup()
+{
+  // 初始化串口通信，用于调试输出
+  Serial.begin(9600);
+
+  // 初始化 I2C 总线
+  Wire.begin(13, 18); // SDA 接 PIN13，SCL 接 PIN18
+
+  // 初始化 OLED 显示屏
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+  {
+    Serial.println("SSD131590 allocation failed");
+    for (;;)
+      ;
+  }
+
+  oled.clearDisplay();
+  oled.display();
+  oled.setTextSize(1);              // 设置字体大小
+  oled.setTextColor(SSD1306_WHITE); // 设置文本颜色
+
+  // 断开之前的连接
+  WiFi.disconnect(true);
+
+  // 创建热点，指定信道为 6
+  if (WiFi.softAP(ssid, password, 6)) {
+    Serial.println("AP created successfully");
+    Serial.print("AP IP address: ");
+    Serial.println(WiFi.softAPIP());
+  } else {
+    Serial.println("Failed to create AP");
+  }
+
+  pinMode(LED, OUTPUT);
+}
+
+void loop()
+{
+  // 设置光标位置
+  oled.setCursor(0, 5);
+  oled.clearDisplay();
+
+  // 检测是否有设备连接到热点
+  uint8_t clientCount = WiFi.softAPgetStationNum();
+  if (clientCount > 0)
+  {
+    oled.print("Connected");
+    digitalWrite(LED, HIGH);
+  }
+  else
+  {
+    oled.print("Waiting for connection");
+    digitalWrite(LED, LOW);
+  }
+
+  // 显示热点的 IP 地址
+  oled.setCursor(0, 20); // 修改纵坐标为合理值
+  oled.print("AP IP: ");
+  oled.print(WiFi.softAPIP());
+  oled.setCursor(0, 30);
+  oled.print(" number:");
+  oled.print(clientCount);
+
+  // 刷新屏幕
+  oled.display();
+
+  delay(100); // 延迟一段时间后更新显示
+}    
